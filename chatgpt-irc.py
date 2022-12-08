@@ -8,15 +8,15 @@ import uuid
 
 class ChatGPT:
     def __init__(self):
-        self.access_token = options["access_token"]
-        self.conversation_id = options["conversation_id"]
-        self.parent_message_id = options["parent_message_id"]
+        self.auth_token = options["auth_token"]
+        self.conversation_id = ""
+        self.parent_message_id = str(uuid.uuid4())
         self.message_id = self.parent_message_id
-        self.clear = False
+        self.new_conversation = True
 
     def reset(self):
-        self.message_id = self.parent_message_id
-        self.clear = True
+        self.message_id = str(uuid.uuid4())
+        self.new_conversation = True
 
     def prompt(self, message):
         self.parent_message_id = self.message_id
@@ -38,13 +38,13 @@ class ChatGPT:
             "model": "text-davinci-002-render",
         }
 
-        if self.clear == True:
+        if self.new_conversation == True:
             del payload["conversation_id"]
 
         payload = json.dumps(payload)
 
         headers = {
-            "Authorization": f"Bearer {self.access_token}",
+            "Authorization": f"Bearer {self.auth_token}",
             "Content-Type": "application/json",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
@@ -61,8 +61,9 @@ class ChatGPT:
             data = json.loads(last)
             message = data["message"]["content"]["parts"][0]
 
-            if self.clear == True:
+            if self.new_conversation == True:
                 self.conversation_id = data["conversation_id"]
+                self.new_conversation = False
 
             messages = parse_outgoing(message)
 

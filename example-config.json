@@ -6,7 +6,5 @@
     "ident": "chatgpt",
     "realname": "chatgpt",
     "channels": ["#rj1"],
-    "access_token": "",
-    "conversation_id": "",
-    "parent_message_id": ""
+    "auth_token": ""
 }
