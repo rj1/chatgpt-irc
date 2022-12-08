@@ -1,0 +1,12 @@
+{
+    "server": "internetrelaychat.net",
+    "port": 6697,
+    "ssl": true,
+    "nickname": "chatgpt",
+    "ident": "chatgpt",
+    "realname": "chatgpt",
+    "channels": ["#rj1"],
+    "access_token": "",
+    "conversation_id": "",
+    "parent_message_id": ""
+}

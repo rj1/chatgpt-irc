@@ -5,22 +5,6 @@ import json
 import requests
 import uuid
 
-options = {
-    # irc
-    "server": "internetrelaychat.net",
-    "port": 6697,
-    "ssl": True,
-    "nickname": "chatgpt",
-    "ident": "chatgpt",
-    "realname": "chatgpt",
-    "channels": ["#rj1", "#h4x"],
-
-    # openai
-    "access_token": "",
-    "conversation_id": "",
-    "parent_message_id": "",
-}
-
 
 class ChatGPT:
     def __init__(self):
@@ -182,9 +166,7 @@ async def main_loop(**options):
                     continue
 
                 if parts[0] == "!reset":
-                    sendcmd(
-                        "PRIVMSG", target, f"{source}: Let's start fresh"
-                    )
+                    sendcmd("PRIVMSG", target, f"{source}: Let's start fresh")
                     chatgpt.reset()
                     continue
 
@@ -205,14 +187,14 @@ async def main_loop(**options):
                     messages = []
                     for line in lines:
                         if len(line) > 350:
-                            words = line.split(' ')
-                            current_message = ''
+                            words = line.split(" ")
+                            current_message = ""
                             for word in words:
                                 if len(current_message) + len(word) + 1 <= 350:
-                                    current_message += word + ' '
+                                    current_message += word + " "
                                 else:
                                     messages.append(current_message)
-                                    current_message = word + ' '
+                                    current_message = word + " "
                             messages.append(current_message)
                         else:
                             messages.append(line)
@@ -225,5 +207,8 @@ async def main_loop(**options):
                             message = f"{source}: {message}"
                         sendcmd("PRIVMSG", target, f"{message}")
 
+
+with open("config.json", "r") as f:
+    options = json.load(f)
 
 asyncio.run(main_loop(**options))
