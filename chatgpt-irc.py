@@ -5,12 +5,28 @@ import json
 import requests
 import uuid
 
+options = {
+    # irc
+    "server": "internetrelaychat.net",
+    "port": 6697,
+    "ssl": True,
+    "nickname": "chatgpt",
+    "ident": "chatgpt",
+    "realname": "chatgpt",
+    "channel": "#rj1",
+
+    # openai
+    "access_token": "",
+    "conversation_id": "",
+    "parent_message_id": "",
+}
+
 
 class ChatGPT:
     def __init__(self):
-        self.access_token = ""
-        self.conversation_id = ""
-        self.parent_message_id = ""
+        self.access_token = options["access_token"]
+        self.conversation_id = options["conversation_id"]
+        self.parent_message_id = options["parent_message_id"]
         self.message_id = self.parent_message_id
 
     def reset(self):
@@ -37,8 +53,15 @@ class ChatGPT:
                 "model": "text-davinci-002-render",
             }
         )
+
         headers = {
             "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+            "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
         }
 
         query = requests.request("POST", url, headers=headers, data=payload)
@@ -112,9 +135,10 @@ def send_msg(writer: asyncio.StreamWriter, target, msg):
     send_cmd_to_writer(writer, "PRIVMSG", target, msg)
 
 
-async def main_loop(host, port, **options):
+async def main_loop(**options):
+    print(options.get("host"))
     reader, writer = await asyncio.open_connection(
-        host, port, ssl=options.get("ssl", True)
+        host=options.get("server"), port=options.get("port"), ssl=options.get("ssl")
     )
 
     sendline = functools.partial(send_line_to_writer, writer)
@@ -133,7 +157,6 @@ async def main_loop(host, port, **options):
             line = line.decode("latin1")
 
         line = line.strip()
-        print(line)
         if line:
             message = parse_line(line)
             if message.command.isdigit() and int(message.command) >= 400:
@@ -192,13 +215,5 @@ async def main_loop(host, port, **options):
                         sendcmd("PRIVMSG", options["channel"], f"{message}")
 
 
-options = {
-    "nickname": "chatgpt",
-    "ident": "chatgpt",
-    "realname": "chatgpt",
-    "channel": "#h4x",
-    "ssl": True,
-}
-
 loop = asyncio.get_event_loop()
-loop.run_until_complete(main_loop("internetrelaychat.net", 6697, **options))
+loop.run_until_complete(main_loop(**options))
