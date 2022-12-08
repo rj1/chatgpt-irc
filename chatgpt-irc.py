@@ -13,7 +13,7 @@ options = {
     "nickname": "chatgpt",
     "ident": "chatgpt",
     "realname": "chatgpt",
-    "channel": "#rj1",
+    "channels": ["#rj1", "#h4x"],
 
     # openai
     "access_token": "",
@@ -166,7 +166,8 @@ async def main_loop(**options):
             if message.command == "PING":
                 sendcmd("PONG", *message.params)
             elif message.command == "001":
-                sendcmd("JOIN", options["channel"])
+                for channel in options["channels"]:
+                    sendcmd("JOIN", channel)
 
             elif message.command == "PRIVMSG":
                 target = str(message.params[0])  # channel or nick
@@ -182,7 +183,7 @@ async def main_loop(**options):
 
                 if parts[0] == "!reset":
                     sendcmd(
-                        "PRIVMSG", options["channel"], f"{source}: Let's start fresh"
+                        "PRIVMSG", target, f"{source}: Let's start fresh"
                     )
                     chatgpt.reset()
                     continue
@@ -193,7 +194,7 @@ async def main_loop(**options):
                 if parts[0] == f"{options['nickname']}:":
                     sendcmd(
                         "PRIVMSG",
-                        options["channel"],
+                        target,
                         f"{source}: hold on, I'm thinking..",
                     )
                     prompt = parts[1:]
@@ -212,8 +213,7 @@ async def main_loop(**options):
                     for i, message in enumerate(messages):
                         if i == 0:
                             message = f"{source}: {message}"
-                        sendcmd("PRIVMSG", options["channel"], f"{message}")
+                        sendcmd("PRIVMSG", target, f"{message}")
 
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main_loop(**options))
+asyncio.run(main_loop(**options))
