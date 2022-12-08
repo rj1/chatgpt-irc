@@ -54,8 +54,9 @@ class ChatGPT:
         try:
             last = response.split(("data:"))[-2]
             items = json.loads(last)["message"]["content"]["parts"][0]
-            lines = items.split("\n")
-            return lines
+            messages = parse_outgoing(items)
+
+            return messages
         except IndexError:
             # raise IndexError()
             return ["We couldn't get a response for you, please try again"]
@@ -117,6 +118,29 @@ def send_cmd_to_writer(writer: asyncio.StreamWriter, cmd, *params):
 
 def send_msg(writer: asyncio.StreamWriter, target, msg):
     send_cmd_to_writer(writer, "PRIVMSG", target, msg)
+
+
+def parse_outgoing(message):
+    lines = message.split("\n")
+    messages = []
+    for line in lines:
+        if len(line) > 350:
+            words = line.split(" ")
+            current_message = ""
+            for word in words:
+                if len(current_message) + len(word) + 1 <= 350:
+                    current_message += word + " "
+                else:
+                    messages.append(current_message)
+                    current_message = word + " "
+            messages.append(current_message)
+        else:
+            messages.append(line)
+
+    while "" in messages:
+        messages.remove("")
+
+    return messages
 
 
 async def main_loop(**options):
@@ -182,26 +206,7 @@ async def main_loop(**options):
                     prompt = parts[1:]
                     prompt = " ".join(prompt)
 
-                    lines = chatgpt.prompt(prompt)
-
-                    messages = []
-                    for line in lines:
-                        if len(line) > 350:
-                            words = line.split(" ")
-                            current_message = ""
-                            for word in words:
-                                if len(current_message) + len(word) + 1 <= 350:
-                                    current_message += word + " "
-                                else:
-                                    messages.append(current_message)
-                                    current_message = word + " "
-                            messages.append(current_message)
-                        else:
-                            messages.append(line)
-
-                    while "" in messages:
-                        messages.remove("")
-
+                    messages = chatgpt.prompt(prompt)
                     for i, message in enumerate(messages):
                         if i == 0:
                             message = f"{source}: {message}"
