@@ -201,14 +201,24 @@ async def main_loop(**options):
                     prompt = " ".join(prompt)
 
                     lines = chatgpt.prompt(prompt)
-                    messages = []
 
+                    messages = []
                     for line in lines:
                         if len(line) > 350:
-                            messages.append(line[:350])
-                            messages.append(line[350:])
+                            words = line.split(' ')
+                            current_message = ''
+                            for word in words:
+                                if len(current_message) + len(word) + 1 <= 350:
+                                    current_message += word + ' '
+                                else:
+                                    messages.append(current_message)
+                                    current_message = word + ' '
+                            messages.append(current_message)
                         else:
                             messages.append(line)
+
+                    while "" in messages:
+                        messages.remove("")
 
                     for i, message in enumerate(messages):
                         if i == 0:
