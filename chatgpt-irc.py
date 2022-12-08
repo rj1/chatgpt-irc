@@ -12,9 +12,11 @@ class ChatGPT:
         self.conversation_id = options["conversation_id"]
         self.parent_message_id = options["parent_message_id"]
         self.message_id = self.parent_message_id
+        self.clear = False
 
     def reset(self):
         self.message_id = self.parent_message_id
+        self.clear = True
 
     def prompt(self, message):
         self.parent_message_id = self.message_id
@@ -22,21 +24,24 @@ class ChatGPT:
 
         url = "https://chat.openai.com/backend-api/conversation"
 
-        payload = json.dumps(
-            {
-                "action": "next",
-                "messages": [
-                    {
-                        "id": self.message_id,
-                        "role": "user",
-                        "content": {"content_type": "text", "parts": [message]},
-                    }
-                ],
-                "conversation_id": self.conversation_id,
-                "parent_message_id": self.parent_message_id,
-                "model": "text-davinci-002-render",
-            }
-        )
+        payload = {
+            "action": "next",
+            "messages": [
+                {
+                    "id": self.message_id,
+                    "role": "user",
+                    "content": {"content_type": "text", "parts": [message]},
+                }
+            ],
+            "conversation_id": self.conversation_id,
+            "parent_message_id": self.parent_message_id,
+            "model": "text-davinci-002-render",
+        }
+
+        if self.clear == True:
+            del payload["conversation_id"]
+
+        payload = json.dumps(payload)
 
         headers = {
             "Authorization": f"Bearer {self.access_token}",
@@ -53,8 +58,13 @@ class ChatGPT:
 
         try:
             last = response.split(("data:"))[-2]
-            items = json.loads(last)["message"]["content"]["parts"][0]
-            messages = parse_outgoing(items)
+            data = json.loads(last)
+            message = data["message"]["content"]["parts"][0]
+
+            if self.clear == True:
+                self.conversation_id = data["conversation_id"]
+
+            messages = parse_outgoing(message)
 
             return messages
         except IndexError:
