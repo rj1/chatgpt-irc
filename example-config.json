@@ -6,5 +6,6 @@
     "ident": "chatgpt",
     "realname": "chatgpt",
     "channels": ["#rj1"],
-    "auth_token": ""
+    "auth_token": "",
+    "cookie": ""
 }
